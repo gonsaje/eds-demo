@@ -24,12 +24,16 @@ function normalizeProjectLink(link) {
  */
 export default function decorate(block) {
   const heading = block.querySelector('h1, h2, h3, h4, h5, h6');
-  const brandLabel = heading?.textContent.trim() || block.textContent.trim() || 'Demo Nav';
-  const authoredLinks = [...block.querySelectorAll('a')].map((link) => {
-    const clone = link.cloneNode(true);
-    normalizeProjectLink(clone);
-    return clone;
-  });
+  const brandSource = heading || [...block.children]
+    .find((row) => row.textContent.trim() && !row.querySelector('a'));
+  const brandLabel = brandSource?.textContent.trim() || 'Demo Nav';
+  const authoredLinks = [...block.querySelectorAll('a')]
+    .filter((link) => !brandSource?.contains(link))
+    .map((link) => {
+      const clone = link.cloneNode(true);
+      normalizeProjectLink(clone);
+      return clone;
+    });
 
   const nav = document.createElement('nav');
   nav.className = 'nav-bar';
