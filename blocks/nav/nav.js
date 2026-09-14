@@ -1,3 +1,20 @@
+const projectHostPattern = /(?:^|--)eds-demo--gonsaje\.aem\.(?:page|live)$/;
+
+/**
+ * Converts links authored against this site's AEM hosts to relative paths.
+ * @param {HTMLAnchorElement} link Authored navigation link
+ */
+function normalizeProjectLink(link) {
+  try {
+    const url = new URL(link.href);
+    if (projectHostPattern.test(url.hostname)) {
+      link.setAttribute('href', `${url.pathname}${url.search}${url.hash}`);
+    }
+  } catch (e) {
+    // Leave malformed or non-URL authored values unchanged.
+  }
+}
+
 /**
  * Decorates the authored Nav block as a simple site-wide navigation bar.
  *
@@ -8,7 +25,11 @@
 export default function decorate(block) {
   const heading = block.querySelector('h1, h2, h3, h4, h5, h6');
   const brandLabel = heading?.textContent.trim() || block.textContent.trim() || 'Demo Nav';
-  const authoredLinks = [...block.querySelectorAll('a')].map((link) => link.cloneNode(true));
+  const authoredLinks = [...block.querySelectorAll('a')].map((link) => {
+    const clone = link.cloneNode(true);
+    normalizeProjectLink(clone);
+    return clone;
+  });
 
   const nav = document.createElement('nav');
   nav.className = 'nav-bar';

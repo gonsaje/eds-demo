@@ -4,6 +4,26 @@ import { loadFragment } from '../fragment/fragment.js';
 // media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
+const projectHostPattern = /(?:^|--)eds-demo--gonsaje\.aem\.(?:page|live)$/;
+
+/**
+ * Keeps links authored against this site's AEM preview or live host on the
+ * visitor's current environment (localhost, preview, live, or production).
+ * @param {HTMLElement} container Element containing authored links
+ */
+function normalizeProjectLinks(container) {
+  container.querySelectorAll('a[href]').forEach((link) => {
+    try {
+      const url = new URL(link.href);
+      if (projectHostPattern.test(url.hostname)) {
+        link.setAttribute('href', `${url.pathname}${url.search}${url.hash}`);
+      }
+    } catch (e) {
+      // Leave malformed or non-URL authored values unchanged.
+    }
+  });
+}
+
 function closeOnEscape(e) {
   if (e.code === 'Escape') {
     const nav = document.getElementById('nav');
@@ -123,6 +143,7 @@ export default async function decorate(block) {
   const nav = document.createElement('nav');
   nav.id = 'nav';
   while (fragment.firstElementChild) nav.append(fragment.firstElementChild);
+  normalizeProjectLinks(nav);
 
   const classes = ['brand', 'sections', 'tools'];
   classes.forEach((c, i) => {
